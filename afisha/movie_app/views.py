@@ -1,10 +1,14 @@
+from rest_framework.generics import (
+    ListCreateAPIView, RetrieveUpdateDestroyAPIView
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from django.contrib.auth.models import User
 from .models import Director, Movie, Review, UserConfirmation
-from .serializers import DirectorSerializer, MovieSerializer, ReviewSerializer, RegisterSerializer
+from .serializers import (
+    DirectorSerializer, MovieSerializer, ReviewSerializer, RegisterSerializer
+)
 
 class DirectorListCreateAPIView(ListCreateAPIView):
     queryset = Director.objects.all()
@@ -22,9 +26,12 @@ class MovieDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
-class MoviesWithReviewsAPIView(APIView):
-    def get(self, request):
-        movies = Movie.objects.all()
+class MoviesWithReviewsAPIView(ListCreateAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+
+    def list(self, request, *args, **kwargs):
+        movies = self.get_queryset()
         data = [
             {
                 "id": movie.id,
@@ -47,16 +54,9 @@ class ReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
-class RegisterAPIView(APIView):
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(
-                {"message": "Пользователь зарегистрирован. Проверьте email для получения кода подтверждения."},
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class RegisterAPIView(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
 
 class ConfirmUserAPIView(APIView):
     def post(self, request):
